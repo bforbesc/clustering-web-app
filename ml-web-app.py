@@ -9,10 +9,11 @@ from sklearn.manifold import TSNE
 import plotly.express as px
 import plotly.io as pio
 
+# define general random seed and plotly template
 pio.templates.default = "ggplot2"
-
 np.random.seed(69)
 
+# INTRO: write introduction
 st.write("""
 # ✂️Clustering cross-sectional data
 
@@ -30,6 +31,7 @@ The algorithms used are **KMeans** and **tSNE**:
 - The **t-distributed stochastic neighbor embedding (t-SNE)** is a statistical method for visualizing high-dimensional data by giving each datapoint a location in a two-dimensional map. It models each high-dimensional object by a two-dimensional point in such a way that similar objects are modeled by nearby points and dissimilar objects are modeled by distant points with high probability.
 """)
 
+# SIDEBAR: develop sidebar
 st.sidebar.header('User input features')
 
 # Collects user input features into dataframe
@@ -178,7 +180,7 @@ st.subheader('Cluster visualization')
 kmeans = KMeans(n_clusters=n_clusters, init='k-means++')
 kmeans.fit(df_scaled)
 
-# Aggregate clusters
+# Aggregate clusters by mean and count
 @st.cache
 def categorical_groupby(lst):
     res_dct = {lst[i]: "count" for i in range(0, len(lst), 1)}
