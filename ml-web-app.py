@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.cluster import KMeans
@@ -39,8 +38,13 @@ sep_option = st.sidebar.selectbox(
     'Which seperator would you like to use?',
      [",", ";", ".", ":", "\s+"])
 
-try:
+@st.cache(allow_output_mutation=True)
+def read_csv_cache():
     df = pd.read_csv(file_object, sep=sep_option)
+    return df
+
+try:
+    df = read_csv_cache()
 except:
     st.error('Please upload a valid CSV file!')
     st.stop()
@@ -63,16 +67,21 @@ if st.checkbox('Show descriptive statistics'):
     st.write(df.describe())
 
 # Data processing
-numerical=df.select_dtypes(include=np.number).columns
-categorical=df.select_dtypes(exclude=np.number).columns
+@st.cache
+def data_processing(data):
+    numerical=data.select_dtypes(include=np.number).columns
+    categorical=data.select_dtypes(exclude=np.number).columns
 
-ct = ColumnTransformer([
-        ("ohe", OneHotEncoder(sparse=False ), categorical)
-    ], remainder='passthrough')
-df_enc=ct.fit_transform(df)
+    ct = ColumnTransformer([
+            ("ohe", OneHotEncoder(sparse=False ), categorical)
+        ], remainder='passthrough')
+    df_enc=ct.fit_transform(data)
 
-scaler = StandardScaler()
-df_scaled = scaler.fit_transform(df_enc)
+    scaler = StandardScaler()
+    df_scaled = scaler.fit_transform(df_enc)
+    return numerical, categorical, df_scaled
+
+numerical, categorical, df_scaled = data_processing(df)
 
 # Plot selected variables
 option = st.selectbox(
@@ -89,17 +98,23 @@ st.subheader('Number of clusters choice')
 
 # Try different number of clusters up to 15
 r=16
-sse = []
-silhouette_coefficients = []
-DB_score= []
-for k in range(2, r):
-     kmeans = KMeans(n_clusters=k, init='k-means++' )
-     kmeans.fit(df_scaled)
-     sse.append(kmeans.inertia_)
-     score = silhouette_score(df_scaled, kmeans.labels_)
-     silhouette_coefficients.append(score)
-     score = davies_bouldin_score(df_scaled, kmeans.labels_)
-     DB_score.append(score)
+@st.cache
+def cluster_choice(df_scaled):
+    sse = []
+    silhouette_coefficients = []
+    DB_score= []
+    for k in range(2, r):
+         kmeans = KMeans(n_clusters=k, init='k-means++' )
+         kmeans.fit(df_scaled)
+         sse.append(kmeans.inertia_)
+         score = silhouette_score(df_scaled, kmeans.labels_)
+         silhouette_coefficients.append(score)
+         score = davies_bouldin_score(df_scaled, kmeans.labels_)
+         DB_score.append(score)
+
+    return sse, silhouette_coefficients, DB_score
+
+sse, silhouette_coefficients, DB_score = cluster_choice(df_scaled)
 
 figure1, axis = plt.subplots(3, 1, figsize=(12,12))
 
@@ -166,10 +181,12 @@ kmeans = KMeans(n_clusters=n_clusters, init='k-means++')
 kmeans.fit(df_scaled)
 
 # Aggregate clusters
+@st.cache
 def categorical_groupby(lst):
     res_dct = {lst[i]: "count" for i in range(0, len(lst), 1)}
     return res_dct
 
+@st.cache(allow_output_mutation=True)
 def numerical_groupby(lst):
     res_dct = {lst[i]: "mean" for i in range(0, len(lst), 1)}
     return res_dct
