@@ -116,8 +116,6 @@ def cluster_choice(df_scaled):
 
 sse, silhouette_coefficients, DB_score = cluster_choice(df_scaled)
 
-figure1, axis = plt.subplots(3, 1, figsize=(12,12))
-
 st.write("""
 Three commonly used methods to evaluate the appropriate number of clusters are:
 1. *The elbow method*
