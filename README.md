@@ -1,9 +1,9 @@
 # [✂️Clustering cross-sectional data](https://clustering-cross-sectional.herokuapp.com/)
 The purpose of this app is to compute and plot clusters for your cross-sectional data.
 
-I assume you have a CSV file with your data *already cleaned* (i.e., without missing values, duplicates or string variables).
+I assume you have a CSV file with your data **already cleaned** (i.e., without missing values, duplicates or string variables).
 
-The algorithms used are KMeans and tSNE.
+The algorithms used are **KMeans** and **tSNE**.
 
 You can find the app here: [clustering-cross-sectional.herokuapp.com](https://clustering-cross-sectional.herokuapp.com/)[^1]
 
