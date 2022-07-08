@@ -215,7 +215,7 @@ df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
 df_clustered = df.groupby("cluster").agg(numerical_agg)
 
 if st.checkbox('Show clusters description'):
-    st.write(df_clustered)
+    st.write(df_clustered[~df_clustered["cluster"]])
     st.write("""
     *Notes: numerical and categorical features aggregated using mean and number of observations, respectively; index corresponds to the cluster number.*
     """)
