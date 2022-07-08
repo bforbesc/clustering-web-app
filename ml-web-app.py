@@ -196,7 +196,7 @@ numerical_agg = numerical_groupby(numerical)
 numerical_agg.update(categorical_agg)
 
 st.write("""
-Below I plot your **Preferred number of clusters** using the **t-SNE** algorithm. 
+Below I plot your **Preferred number of clusters** ⬅️using the **t-SNE** algorithm. 
 """)
 
 # t-SNE
@@ -211,10 +211,11 @@ fig.update_yaxes(title_text="t-SNE feature 2")
 fig.update(layout_coloraxis_showscale=False)
 st.plotly_chart(fig, use_container_width=True)
 
-df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
-df_clusters = df.groupby("cluster").agg(numerical_agg).drop(["cluster"], axis=1)
-
 if st.checkbox('Show clusters description'):
+    df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
+    df_clusters = df.groupby("cluster").agg(numerical_agg).reset_index(drop=True)
+    if 'cluster' in df_clusters.columns:
+        df_clusters = df_clusters.drop(["cluster"], axis=1)
     st.dataframe(df_clusters)
     st.write("""
     *Notes: numerical and categorical features aggregated using mean and number of observations, respectively; index corresponds to the cluster number.*
