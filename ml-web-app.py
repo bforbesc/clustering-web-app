@@ -200,7 +200,7 @@ Below I plot your **Preferred number of clusters** using the **t-SNE** algorithm
 """)
 
 # t-SNE
-tsne = TSNE(random_state=69,  perplexity = 30)
+tsne = TSNE(perplexity = 30)
 X_tsne = tsne.fit_transform(df_scaled)
 
 # Plot 4: t-SNE
@@ -213,9 +213,10 @@ st.plotly_chart(fig, use_container_width=True)
 
 df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
 df_clustered = df.groupby("cluster").agg(numerical_agg)
+df_clustered.drop("cluster", axis=1)
 
 if st.checkbox('Show clusters description'):
-    st.write(df_clustered[~df_clustered["cluster"]])
+    st.write(df_clustered)
     st.write("""
     *Notes: numerical and categorical features aggregated using mean and number of observations, respectively; index corresponds to the cluster number.*
     """)
