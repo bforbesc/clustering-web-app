@@ -213,7 +213,6 @@ st.plotly_chart(fig, use_container_width=True)
 
 df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
 df_clustered = df.groupby("cluster").agg(numerical_agg)
-df_clustered.drop("cluster", axis=1)
 
 if st.checkbox('Show clusters description'):
     st.write(df_clustered)
