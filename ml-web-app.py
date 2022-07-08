@@ -212,10 +212,10 @@ fig.update(layout_coloraxis_showscale=False)
 st.plotly_chart(fig, use_container_width=True)
 
 df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
-df_clustered = df.groupby("cluster").agg(numerical_agg)
+df_clusters = df.groupby("cluster").agg(numerical_agg).drop(["cluster"], axis=1)
 
 if st.checkbox('Show clusters description'):
-    st.write(df_clustered)
+    st.dataframe(df_clusters)
     st.write("""
     *Notes: numerical and categorical features aggregated using mean and number of observations, respectively; index corresponds to the cluster number.*
     """)
