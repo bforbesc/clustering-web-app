@@ -47,8 +47,8 @@ def read_csv_cache():
 
 try:
     df = read_csv_cache()
-except:
-    st.error('Please upload a valid CSV file!')
+except Exception as e:
+    st.error(f'Error reading CSV file: {e}. Please upload a valid CSV file!')
     st.stop()
 
 if df.shape[1] == 1:
@@ -116,7 +116,9 @@ def cluster_choice(df_scaled):
 
     return sse, silhouette_coefficients, DB_score
 
-sse, silhouette_coefficients, DB_score = cluster_choice(df_scaled)
+# Add loading indicator for clustering
+with st.spinner('Clustering in progress...'):
+    sse, silhouette_coefficients, DB_score = cluster_choice(df_scaled)
 
 st.write("""
 Three commonly used methods to evaluate the appropriate number of clusters are:
@@ -129,7 +131,7 @@ These are often used as complementary evaluation techniques rather than one bein
 1. **Elbow Method**
 To perform the *elbow method*, we run several KMeans, incrementing the number of clusters with each iteration, and record the sum of the squared errors (SSE).
 The SSE continues to decrease as we increase the number of clusters. As more centroids are added, the distance from each point to its closest centroid will decrease.
-There’s a sweet spot **where the SSE curve starts to bend** known as the elbow point. The x-value of this point is thought to be a reasonable trade-off between error and number of clusters. 
+There's a sweet spot **where the SSE curve starts to bend** known as the elbow point. The x-value of this point is thought to be a reasonable trade-off between error and number of clusters. 
 """)
 
 # Plot 1: SSE - choose elbow
@@ -201,7 +203,10 @@ Below I plot your **Preferred number of clusters** ⬅️using the **t-SNE** alg
 
 # t-SNE
 tsne = TSNE(perplexity = 30)
-X_tsne = tsne.fit_transform(df_scaled)
+
+# Add loading indicator for t-SNE
+with st.spinner('Running t-SNE...'):
+    X_tsne = tsne.fit_transform(df_scaled)
 
 # Plot 4: t-SNE
 fig = px.scatter(x = X_tsne[:, 0], y = X_tsne[:, 1], color=kmeans.labels_, color_continuous_scale=px.colors.sequential.Agsunset_r)
