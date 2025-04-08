@@ -49,15 +49,14 @@ def read_csv_cache():
 if file_object is not None:
     try:
         df = read_csv_cache()
+        if df.shape[1] == 1:
+            st.error('Please select the appropriate separator for your CSV!')
+            st.stop()
     except Exception as e:
         st.error(f'Error reading CSV file: {e}. Please upload a valid CSV file!')
         st.stop()
 else:
     st.info('Please upload a CSV file to proceed.')
-
-if df.shape[1] == 1:
-    st.error('Please select the appropriate separator for your CSV!')
-    st.stop()
 
 st.sidebar.header('Preferred number of clusters')
 n_clusters = st.sidebar.slider('Number of clusters', 2, 15, 2)
