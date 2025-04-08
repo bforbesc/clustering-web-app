@@ -52,51 +52,55 @@ if file_object is not None:
         if df.shape[1] == 1:
             st.error('Please select the appropriate separator for your CSV!')
             st.stop()
+        
+        # Display features only after df is successfully imported
+        st.sidebar.header('Preferred number of clusters')
+        n_clusters = st.sidebar.slider('Number of clusters', 2, 15, 2)
+
+        # SUBSECTION: DATA
+        st.subheader('Data description')
+
+        # Displays the dataframe head
+        if st.checkbox('Show data'):
+            st.write(df)
+
+        if st.checkbox('Show descriptive statistics'):
+            st.write(df.describe())
+
+        # Data processing
+        @st.cache
+        def data_processing(data):
+            numerical=data.select_dtypes(include=np.number).columns
+            categorical=data.select_dtypes(exclude=np.number).columns
+
+            ct = ColumnTransformer([
+                    ("ohe", OneHotEncoder(sparse=False ), categorical)
+                ], remainder='passthrough')
+            df_enc=ct.fit_transform(data)
+
+            scaler = StandardScaler()
+            df_scaled = scaler.fit_transform(df_enc)
+            return numerical, categorical, df_scaled
+
+        numerical, categorical, df_scaled = data_processing(df)
+
+        # Plot selected variables
+        option = st.selectbox(
+            'Which variable would you like to plot the distribution of?', df.columns)
+
+        fig = px.histogram(df[option], title=option.replace("_", " ").title())
+        fig.update_layout(showlegend=False)
+        fig.update_xaxes(title_text="", showgrid=False)
+        fig.update_yaxes(title_text="Number of observations")
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Continue with the rest of the app logic...
+
     except Exception as e:
         st.error(f'Error reading CSV file: {e}. Please upload a valid CSV file!')
         st.stop()
 else:
     st.info('Please upload a CSV file to proceed.')
-
-st.sidebar.header('Preferred number of clusters')
-n_clusters = st.sidebar.slider('Number of clusters', 2, 15, 2)
-
-# SUBSECTION: DATA
-st.subheader('Data description')
-
-# Displays the dataframe head
-if st.checkbox('Show data'):
-    st.write(df)
-
-if st.checkbox('Show descriptive statistics'):
-    st.write(df.describe())
-
-# Data processing
-@st.cache
-def data_processing(data):
-    numerical=data.select_dtypes(include=np.number).columns
-    categorical=data.select_dtypes(exclude=np.number).columns
-
-    ct = ColumnTransformer([
-            ("ohe", OneHotEncoder(sparse=False ), categorical)
-        ], remainder='passthrough')
-    df_enc=ct.fit_transform(data)
-
-    scaler = StandardScaler()
-    df_scaled = scaler.fit_transform(df_enc)
-    return numerical, categorical, df_scaled
-
-numerical, categorical, df_scaled = data_processing(df)
-
-# Plot selected variables
-option = st.selectbox(
- 'Which variable would you like to plot the distribution of?', df.columns)
-
-fig = px.histogram(df[option], title=option.replace("_", " ").title())
-fig.update_layout(showlegend=False)
-fig.update_xaxes(title_text="", showgrid=False)
-fig.update_yaxes(title_text="Number of observations")
-st.plotly_chart(fig, use_container_width=True)
 
 # SUBSECTION: CHOOSING NUMBER OF CLUSTERS
 st.subheader('Number of clusters choice')
