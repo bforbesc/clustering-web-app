@@ -48,12 +48,13 @@ def read_csv_cache():
 # Check if a file is uploaded before attempting to read
 if file_object is not None:
     try:
+        # --- Start: Code executed ONLY if file object exists and is read successfully ---
         df = read_csv_cache()
         if df.shape[1] == 1:
             st.error('Please select the appropriate separator for your CSV!')
             st.stop()
         
-        # Display features only after df is successfully imported
+        # Display sidebar features only after df is successfully imported
         st.sidebar.header('Preferred number of clusters')
         n_clusters = st.sidebar.slider('Number of clusters', 2, 15, 2)
 
@@ -94,7 +95,140 @@ if file_object is not None:
         fig.update_yaxes(title_text="Number of observations")
         st.plotly_chart(fig, use_container_width=True)
 
-        # Continue with the rest of the app logic...
+        # SUBSECTION: CHOOSING NUMBER OF CLUSTERS
+        st.subheader('Number of clusters choice')
+
+        # Try different number of clusters up to 15
+        r=16
+        @st.cache
+        def cluster_choice(df_scaled):
+            sse = []
+            silhouette_coefficients = []
+            DB_score= []
+            for k in range(2, r):
+                 kmeans = KMeans(n_clusters=k, init='k-means++' )
+                 kmeans.fit(df_scaled)
+                 sse.append(kmeans.inertia_)
+                 score = silhouette_score(df_scaled, kmeans.labels_)
+                 silhouette_coefficients.append(score)
+                 score = davies_bouldin_score(df_scaled, kmeans.labels_)
+                 DB_score.append(score)
+
+            return sse, silhouette_coefficients, DB_score
+
+        # Add loading indicator for clustering
+        with st.spinner('Clustering in progress...'):
+            sse, silhouette_coefficients, DB_score = cluster_choice(df_scaled)
+
+        st.write("""
+        Three commonly used methods to evaluate the appropriate number of clusters are:
+        1. *The elbow method*
+        2. *The silhouette coefficient*
+        3. *Davies Bouldin index*
+
+        These are often used as complementary evaluation techniques rather than one being preferred over the other. 
+
+        1. **Elbow Method**
+        To perform the *elbow method*, we run several KMeans, incrementing the number of clusters with each iteration, and record the sum of the squared errors (SSE).
+        The SSE continues to decrease as we increase the number of clusters. As more centroids are added, the distance from each point to its closest centroid will decrease.
+        There's a sweet spot **where the SSE curve starts to bend** known as the elbow point. The x-value of this point is thought to be a reasonable trade-off between error and number of clusters. 
+        """)
+
+        # Plot 1: SSE - choose elbow
+        fig = px.line(x = range(2, r), y = sse)
+        fig.update_layout(showlegend=False)
+        fig.update_xaxes(title_text="Number fo clusters")
+        fig.update_yaxes(title_text="SSE", showgrid=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.write("""
+        2. **Silhoutte coefficient** 
+        The *silhouette coefficient* is a measure of cluster cohesion and separation. It quantifies how well a data point fits into its assigned cluster based on two factors:
+        - How close the data point is to other points in the cluster
+        - How far away the data point is from points in other clusters
+        Its values ranges from -1 and 1. **Larger numbers** indicate that samples are closer to their clusters than they are to other clusters.
+        In the ```sklearn``` implementation, the average *silhouette coefficient* of all the samples is summarized into one score.
+        """)
+
+        # Plot 2: Silhouette Coefficient - choose local maximum
+        fig = px.line(x = range(2, r), y = silhouette_coefficients)
+        fig.update_layout(showlegend=False)
+        fig.update_xaxes(title_text="Number fo clusters")
+        fig.update_yaxes(title_text="Silhouette coefficient", showgrid=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.write("""
+        3. **Davies-Bouldin index** 
+        The  *Davies-Bouldin index* is easier to calculation than the *silhouette scores*. 
+        It is the ratio between the within cluster distances and the between cluster distances, averaged across clusters. Its is therefore bounded between 0 and 1.
+        A **lower index** relates to a model with better separation between the clusters.
+        """)
+
+        # Plot 3: Davies Bouldin Score - choose local minimum
+        fig = px.line(x = range(2, r), y = DB_score)
+        fig.update_layout(showlegend=False)
+        fig.update_xaxes(title_text="Number fo clusters")
+        fig.update_yaxes(title_text="Davies Bouldin score", showgrid=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.write("""
+        > Please choose your desired number of clusters (based on your combined interpretation of the previous three methods/ graphs) on the slider bar on the left panel **Preferred number of clusters** ⬅️.
+        """)
+
+        # SUBSECTION: VISUALIZATION
+        st.subheader('Cluster visualization')
+
+        # KMeans
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++')
+        kmeans.fit(df_scaled)
+
+        # Aggregate clusters by mean and count
+        @st.cache
+        def categorical_groupby(lst):
+            res_dct = {lst[i]: "count" for i in range(0, len(lst), 1)}
+            return res_dct
+
+        @st.cache(allow_output_mutation=True)
+        def numerical_groupby(lst):
+            res_dct = {lst[i]: "mean" for i in range(0, len(lst), 1)}
+            return res_dct
+
+        categorical_agg = categorical_groupby(categorical)
+        numerical_agg = numerical_groupby(numerical)
+        numerical_agg.update(categorical_agg)
+
+        st.write("""
+        Below I plot your **Preferred number of clusters** ⬅️using the **t-SNE** algorithm. 
+        """)
+
+        # t-SNE
+        tsne = TSNE(perplexity = 30)
+
+        # Add loading indicator for t-SNE
+        with st.spinner('Running t-SNE...'):
+            X_tsne = tsne.fit_transform(df_scaled)
+
+        # Plot 4: t-SNE
+        fig = px.scatter(x = X_tsne[:, 0], y = X_tsne[:, 1], color=kmeans.labels_, color_continuous_scale=px.colors.sequential.Agsunset_r)
+        fig.update_layout(showlegend=False)
+        fig.update_xaxes(title_text="t-SNE feature 1")
+        fig.update_yaxes(title_text="t-SNE feature 2")
+        fig.update(layout_coloraxis_showscale=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+        if st.checkbox('Show clusters description'):
+            df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
+            df_clusters = df.groupby("cluster").agg(numerical_agg).reset_index(drop=True)
+            if 'cluster' in df_clusters.columns:
+                df_clusters = df_clusters.drop(["cluster"], axis=1)
+            st.dataframe(df_clusters)
+            st.write("""
+            *Notes: numerical and categorical features aggregated using mean and number of observations, respectively; index corresponds to the cluster number.*
+            """)
+
+        if st.checkbox('Show original data with cluster assignment'):
+            st.write(df)
+        # --- End: Code executed ONLY if file object exists and is read successfully ---
 
     except Exception as e:
         st.error(f'Error reading CSV file: {e}. Please upload a valid CSV file!')
@@ -102,136 +236,4 @@ if file_object is not None:
 else:
     st.info('Please upload a CSV file to proceed.')
 
-# SUBSECTION: CHOOSING NUMBER OF CLUSTERS
-st.subheader('Number of clusters choice')
-
-# Try different number of clusters up to 15
-r=16
-@st.cache
-def cluster_choice(df_scaled):
-    sse = []
-    silhouette_coefficients = []
-    DB_score= []
-    for k in range(2, r):
-         kmeans = KMeans(n_clusters=k, init='k-means++' )
-         kmeans.fit(df_scaled)
-         sse.append(kmeans.inertia_)
-         score = silhouette_score(df_scaled, kmeans.labels_)
-         silhouette_coefficients.append(score)
-         score = davies_bouldin_score(df_scaled, kmeans.labels_)
-         DB_score.append(score)
-
-    return sse, silhouette_coefficients, DB_score
-
-# Add loading indicator for clustering
-with st.spinner('Clustering in progress...'):
-    sse, silhouette_coefficients, DB_score = cluster_choice(df_scaled)
-
-st.write("""
-Three commonly used methods to evaluate the appropriate number of clusters are:
-1. *The elbow method*
-2. *The silhouette coefficient*
-3. *Davies Bouldin index*
-
-These are often used as complementary evaluation techniques rather than one being preferred over the other. 
-
-1. **Elbow Method**
-To perform the *elbow method*, we run several KMeans, incrementing the number of clusters with each iteration, and record the sum of the squared errors (SSE).
-The SSE continues to decrease as we increase the number of clusters. As more centroids are added, the distance from each point to its closest centroid will decrease.
-There's a sweet spot **where the SSE curve starts to bend** known as the elbow point. The x-value of this point is thought to be a reasonable trade-off between error and number of clusters. 
-""")
-
-# Plot 1: SSE - choose elbow
-fig = px.line(x = range(2, r), y = sse)
-fig.update_layout(showlegend=False)
-fig.update_xaxes(title_text="Number fo clusters")
-fig.update_yaxes(title_text="SSE", showgrid=False)
-st.plotly_chart(fig, use_container_width=True)
-
-st.write("""
-2. **Silhoutte coefficient** 
-The *silhouette coefficient* is a measure of cluster cohesion and separation. It quantifies how well a data point fits into its assigned cluster based on two factors:
-- How close the data point is to other points in the cluster
-- How far away the data point is from points in other clusters
-Its values ranges from -1 and 1. **Larger numbers** indicate that samples are closer to their clusters than they are to other clusters.
-In the ```sklearn``` implementation, the average *silhouette coefficient* of all the samples is summarized into one score.
-""")
-
-# Plot 2: Silhouette Coefficient - choose local maximum
-fig = px.line(x = range(2, r), y = silhouette_coefficients)
-fig.update_layout(showlegend=False)
-fig.update_xaxes(title_text="Number fo clusters")
-fig.update_yaxes(title_text="Silhouette coefficient", showgrid=False)
-st.plotly_chart(fig, use_container_width=True)
-
-st.write("""
-3. **Davies-Bouldin index** 
-The  *Davies-Bouldin index* is easier to calculation than the *silhouette scores*. 
-It is the ratio between the within cluster distances and the between cluster distances, averaged across clusters. Its is therefore bounded between 0 and 1.
-A **lower index** relates to a model with better separation between the clusters.
-""")
-
-# Plot 3: Davies Bouldin Score - choose local minimum
-fig = px.line(x = range(2, r), y = DB_score)
-fig.update_layout(showlegend=False)
-fig.update_xaxes(title_text="Number fo clusters")
-fig.update_yaxes(title_text="Davies Bouldin score", showgrid=False)
-st.plotly_chart(fig, use_container_width=True)
-
-st.write("""
-> Please choose your desired number of clusters (based on your combined interpretation of the previous three methods/ graphs) on the slider bar on the left panel **Preferred number of clusters** ⬅️.
-""")
-
-# SUBSECTION: VISUALIZATION
-st.subheader('Cluster visualization')
-
-# KMeans
-kmeans = KMeans(n_clusters=n_clusters, init='k-means++')
-kmeans.fit(df_scaled)
-
-# Aggregate clusters by mean and count
-@st.cache
-def categorical_groupby(lst):
-    res_dct = {lst[i]: "count" for i in range(0, len(lst), 1)}
-    return res_dct
-
-@st.cache(allow_output_mutation=True)
-def numerical_groupby(lst):
-    res_dct = {lst[i]: "mean" for i in range(0, len(lst), 1)}
-    return res_dct
-
-categorical_agg = categorical_groupby(categorical)
-numerical_agg = numerical_groupby(numerical)
-numerical_agg.update(categorical_agg)
-
-st.write("""
-Below I plot your **Preferred number of clusters** ⬅️using the **t-SNE** algorithm. 
-""")
-
-# t-SNE
-tsne = TSNE(perplexity = 30)
-
-# Add loading indicator for t-SNE
-with st.spinner('Running t-SNE...'):
-    X_tsne = tsne.fit_transform(df_scaled)
-
-# Plot 4: t-SNE
-fig = px.scatter(x = X_tsne[:, 0], y = X_tsne[:, 1], color=kmeans.labels_, color_continuous_scale=px.colors.sequential.Agsunset_r)
-fig.update_layout(showlegend=False)
-fig.update_xaxes(title_text="t-SNE feature 1")
-fig.update_yaxes(title_text="t-SNE feature 2")
-fig.update(layout_coloraxis_showscale=False)
-st.plotly_chart(fig, use_container_width=True)
-
-if st.checkbox('Show clusters description'):
-    df["cluster"] = pd.Series(kmeans.labels_, index=df.index)
-    df_clusters = df.groupby("cluster").agg(numerical_agg).reset_index(drop=True)
-    if 'cluster' in df_clusters.columns:
-        df_clusters = df_clusters.drop(["cluster"], axis=1)
-    st.dataframe(df_clusters)
-    st.write("""
-    *Notes: numerical and categorical features aggregated using mean and number of observations, respectively; index corresponds to the cluster number.*
-    """)
-
-if st.checkbox('Show original data with cluster assignment'):
-    st.write(df)
+# No code should remain here that depends on 'df' or 'df_scaled'
