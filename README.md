@@ -19,7 +19,7 @@
 | **Plotly** | Draws interactive graphs. |
 | **Streamlit** | Wraps the experiment in a browser interface. |
 
-This is **unsupervised learning**: no answer labels are supplied. In **supervised learning**, examples include answers used to train a predictor. Compare it with [the first-classifier lesson](https://github.com/bforbesc/Data-AI-with-Forbes/blob/main/notebooks/3-first-classifier.ipynb).
+This is **unsupervised learning**: no answer labels are supplied. In **supervised learning**, examples include answers used to train a predictor. Compare it with [the first-classifier lesson](https://github.com/bforbesc/Data-AI-with-Forbes/blob/main/notebooks/first-classifier.ipynb).
 
 **Can a computer find groups in a table without being told the answers?**
 
