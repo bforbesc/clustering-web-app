@@ -2,7 +2,7 @@
 
 > **Learning case study** · Unsupervised machine learning · Preprocessing · Data visualization
 >
-> An experiment preserved for teaching. You can learn from the explanation, sample, and code even if the original app no longer runs.
+> A historical experiment with explanations, examples, and source code.
 
 [📚 Learning hub](https://github.com/bforbesc/Data-AI-with-Forbes) · [🧭 Beginner guide](https://github.com/bforbesc/Data-AI-with-Forbes/blob/main/START_HERE.md) · [🌐 Build and deploy a data app](https://github.com/bforbesc/Data-AI-with-Forbes/tree/main/templates/streamlit-starter)
 
@@ -11,8 +11,6 @@
 **What does it mean to find similar observations without supplying the answers?**
 
 **Measurements → comparable scales → chosen number of groups → visual check**
-
-This is a study of an approach, rather than a recommendation to adopt an old app. First explain what happens in each step; only then look at the library or framework that implements it.
 
 | Tool in this project | What it does in the example |
 |---|---|
@@ -37,7 +35,7 @@ A useful example is grouping shop visits by how often someone visits and how muc
 
 ## Start here: no coding
 
-Use the [original hosted app](https://clustering-web-app.streamlit.app), if it is available, or ask your teacher to run it. Its availability is not guaranteed. If the app fails, use the discussion and worksheet below.
+Open the [original hosted app](https://clustering-web-app.streamlit.app), if available, or run a local copy using the setup below. The sample and worked examples can be read without the app.
 
 1. Open [the fictional shop-visits sample](examples/shop_visits.csv) on GitHub and choose **Download raw file** near the top right. Keep the `.csv` extension. CSV is simply a table saved as text with commas between values.
 2. In the app, use **Upload your cleaned CSV file** to choose that downloaded file. Keep the separator set to a comma.
@@ -76,11 +74,11 @@ The app standardizes the columns before clustering so their scales are more comp
 
 On paper, group these six fictional observations: `(1 visit, €20)`, `(2, €25)`, `(6, €70)`, `(7, €80)`, `(11, €150)`, `(12, €160)`. First make two groups, then three. Compare your choices with a classmate's. Do you agree because of the data, or because you were asked for that number of groups?
 
-## For teachers and optional local setup
+## Optional: run a local copy
 
-Allow about 20 minutes. Use the bundled sample before trying another file. The current app tries cluster counts from 2 to 15 and uses t-SNE perplexity 30, so keep more than 30 rows. Avoid missing values, duplicates, text columns, and identifier columns for this first activity. Do not use real student or customer records.
+The bundled sample is ready to upload. The current app tries cluster counts from 2 to 15 and uses t-SNE perplexity 30, so keep more than 30 rows. Avoid missing values, duplicates, text columns, and identifier columns for this first activity. Do not use real student or customer records.
 
-The requirements are from an older Python stack. A compatible Python 3.10 environment is a starting point for the pinned versions, not a promise that every modern machine can install them. Do not ask beginners to debug dependencies as their first activity.
+The requirements are from an older Python stack. A compatible Python 3.10 environment is a starting point for the pinned versions, not a promise that every modern machine can install them.
 
 Download and extract the repository using **Code → Download ZIP**. In a terminal in that folder:
 
@@ -95,7 +93,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run ml-web-app.py
 ```
 
-Use `python3` to create the environment if that is your Python command. Open the local address printed by Streamlit; stop with **Ctrl+C**. Older dependencies or the deployment may need maintenance before class.
+Use `python3` to create the environment if that is your Python command. Open the local address printed by Streamlit; stop with **Ctrl+C**. Older dependencies or the deployment may need maintenance.
 
 ## Optional: look inside
 
