@@ -160,7 +160,7 @@ if file_object is not None:
         st.write("""
         3. **Davies-Bouldin index** 
         The  *Davies-Bouldin index* is easier to calculation than the *silhouette scores*. 
-        It is the ratio between the within cluster distances and the between cluster distances, averaged across clusters. Its is therefore bounded between 0 and 1.
+        It is the ratio between the within cluster distances and the between cluster distances, averaged across clusters. It is non-negative and has no fixed upper bound.
         A **lower index** relates to a model with better separation between the clusters.
         """)
 
