@@ -1,6 +1,6 @@
 # 🧩 Clustering Web App
 
-> **Learning case study** · 🧩 Unsupervised machine learning · Preprocessing · Data visualization
+> **Learning case study** · Unsupervised machine learning · Preprocessing · Data visualization
 >
 > An experiment preserved for teaching. You can learn from the explanation, sample, and code even if the original app no longer runs.
 
